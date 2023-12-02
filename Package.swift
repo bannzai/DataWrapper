@@ -1,23 +1,54 @@
 // swift-tools-version: 5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
+import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
     name: "DataWrapper",
+    platforms: [
+        .iOS(.v16),
+        .macOS(.v13),
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "DataWrapper",
             targets: ["DataWrapper"]),
     ],
+    dependencies: [
+        .package(
+            url: "https://github.com/apple/swift-syntax.git",
+            from: "509.0.0-swift-DEVELOPMENT-SNAPSHOT-2023-06-05-a"
+        ),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        .macro(
+            name: "DataWrapperPlugin",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftOperators", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ]
+        ),
         .target(
-            name: "DataWrapper"),
+            name: "DataWrapper",
+            dependencies: ["DataWrapperPlugin"]
+        ),
         .testTarget(
-            name: "DataWrapperTests",
-            dependencies: ["DataWrapper"]),
+            name: "DataWrapperPluginTests",
+            dependencies: [
+                "DataWrapperPlugin",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ]
+        ),
+        .executableTarget(
+            name: "DataWrapperExamples",
+            dependencies: [
+                "DataWrapper"
+            ]
+        )
     ]
 )
