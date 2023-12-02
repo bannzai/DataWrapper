@@ -10,7 +10,7 @@ public struct DataModelMacro: MemberMacro {
   ) throws -> [DeclSyntax] where Declaration : DeclGroupSyntax, Context : MacroExpansionContext {
     switch declaration.kind {
     case .classDecl:
-      guard var declaration = declaration.as(ClassDeclSyntax.self) else {
+      guard let declaration = declaration.as(ClassDeclSyntax.self) else {
         fatalError("Unexpected cast fail when kind == .classDecl")
       }
 
@@ -21,35 +21,6 @@ public struct DataModelMacro: MemberMacro {
       } else {
         access = ""
       }
-
-      var attributes = declaration.attributes
-      let containsDynamicMemberLookup = attributes.contains(where: { attr in
-        guard case .attribute(let attribute) = attr else {
-          return false
-        }
-        if attribute.attributeName.trimmedDescription == "@dynamicMemberLookup" {
-          return true
-        }
-        return false
-      })
-      if !containsDynamicMemberLookup {
-        attributes.append(.init(.init(stringLiteral: "@dynamicMemberLookup")))
-      }
-      
-      let containsModel = attributes.contains(where: { attr in
-        guard case .attribute(let attribute) = attr else {
-          return false
-        }
-        if attribute.attributeName.trimmedDescription == "@Model" {
-          return true
-        }
-        return false
-      })
-      if !containsModel {
-        attributes.append(.init(.init(stringLiteral: "@Model")))
-      }
-      declaration.attributes = attributes
-      declaration.inheritanceClause?.inheritedTypes.append(.init(IdentifierTypeSyntax(TokenSyntax(stringLiteral: "DataModelProtocol")))!)
 
       let member = MemberBlockItemListSyntax {
 """
@@ -83,9 +54,8 @@ public struct DataModelMacro: MemberMacro {
       }
       """
       }
-      declaration.memberBlock.members.append(contentsOf: member)
 
-      return [declaration.cast(DeclSyntax.self)]
+      return ["\(raw: member)"]
     case _:
       throw CustomError.message("@DataModel can only be applied to a struct or class declarations.")
     }
