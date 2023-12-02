@@ -49,6 +49,8 @@ public struct DataModelMacro: MemberMacro {
         attributes.append(.init(.init(stringLiteral: "@Model")))
       }
       declaration.attributes = attributes
+      declaration.inheritanceClause?.inheritedTypes.append(.init(IdentifierTypeSyntax(TokenSyntax(stringLiteral: "DataModelProtocol")))!)
+
       let member = MemberBlockItemListSyntax {
 """
       var json: String
