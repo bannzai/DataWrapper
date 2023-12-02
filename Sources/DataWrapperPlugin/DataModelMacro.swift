@@ -23,7 +23,7 @@ public struct DataModelMacro: MemberMacro {
       }
 
       var attributes = declaration.attributes
-      let contains = attributes.contains(where: { attr in
+      let containsDynamicMemberLookup = attributes.contains(where: { attr in
         guard case .attribute(let attribute) = attr else {
           return false
         }
@@ -32,8 +32,21 @@ public struct DataModelMacro: MemberMacro {
         }
         return false
       })
-      if !contains {
+      if !containsDynamicMemberLookup {
         attributes.append(.init(.init(stringLiteral: "@dynamicMemberLookup")))
+      }
+      
+      let containsModel = attributes.contains(where: { attr in
+        guard case .attribute(let attribute) = attr else {
+          return false
+        }
+        if attribute.attributeName.trimmedDescription == "@Model" {
+          return true
+        }
+        return false
+      })
+      if !containsModel {
+        attributes.append(.init(.init(stringLiteral: "@Model")))
       }
       declaration.attributes = attributes
       let member = MemberBlockItemListSyntax {
