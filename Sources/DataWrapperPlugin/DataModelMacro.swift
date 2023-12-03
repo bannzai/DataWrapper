@@ -23,7 +23,7 @@ public struct DataModelMacro: PeerMacro {
 
       let dataDecl = ClassDeclSyntax(
         attributes: .init(itemsBuilder: {
-//          "@Model"
+          "@Model"
           "@dynamicMemberLookup"
         }),
         classKeyword: " class ",
