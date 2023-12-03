@@ -4,14 +4,13 @@ import CoreData
 import DataWrapper
 
 @DataModel
-@dynamicMemberLookup class Schedule  {
-  struct Entity: Codable {
-    let id: String
-    let name: String
-  }
+struct Schedule  {
+  let id: String
+  let name: String
 }
 
-let schedule = Schedule(entity: .init(id: "", name: ""))
-let entity = Schedule.Entity(id: "", name: "")
+
+let schedule = ScheduleData.init(entity: .init(id: "", name: ""))
+let entity = ScheduleData.Entity(id: "", name: "")
 
 schedule.name
