@@ -2,7 +2,21 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
 
-public struct DataModelMacro: MemberMacro {
+public struct DataModelMacro: MemberMacro, PeerMacro {
+  public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
+    switch declaration.kind {
+    case .classDecl:
+      let modelMacro = AttributeListSyntax {
+        "@Model"
+        "@dynamicMemberLookup"
+      }
+
+      return ["\(raw: modelMacro)"]
+    case _:
+      throw CustomError.message("@DataModel can only be applied to a struct or class declarations.")
+    }
+  }
+
   public static func expansion<Declaration, Context>(
     of node: AttributeSyntax,
     providingMembersOf declaration: Declaration,
@@ -23,7 +37,7 @@ public struct DataModelMacro: MemberMacro {
       }
 
       let member = MemberBlockItemListSyntax {
-"""
+      """
       var json: String
 
       init(entity: Entity) {
