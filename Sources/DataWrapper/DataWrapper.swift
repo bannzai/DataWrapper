@@ -1,5 +1,5 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-@attached(member) @attached(peer)
+@attached(peer, names: suffixed(Data))
 public macro DataModel() = #externalMacro(module: "DataWrapperPlugin", type: "DataModelMacro")

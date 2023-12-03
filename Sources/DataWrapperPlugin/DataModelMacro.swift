@@ -2,30 +2,12 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftSyntaxBuilder
 
-public struct DataModelMacro: MemberMacro, PeerMacro {
+public struct DataModelMacro: PeerMacro {
   public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
     switch declaration.kind {
-    case .classDecl:
-      let modelMacro = AttributeListSyntax {
-        "@Model"
-        "@dynamicMemberLookup"
-      }
-
-      return ["\(raw: modelMacro)"]
-    case _:
-      throw CustomError.message("@DataModel can only be applied to a struct or class declarations.")
-    }
-  }
-
-  public static func expansion<Declaration, Context>(
-    of node: AttributeSyntax,
-    providingMembersOf declaration: Declaration,
-    in context: Context
-  ) throws -> [DeclSyntax] where Declaration : DeclGroupSyntax, Context : MacroExpansionContext {
-    switch declaration.kind {
-    case .classDecl:
-      guard let declaration = declaration.as(ClassDeclSyntax.self) else {
-        fatalError("Unexpected cast fail when kind == .classDecl")
+    case .structDecl:
+      guard let declaration = declaration.as(StructDeclSyntax.self) else {
+        fatalError("Unexpected cast fail when kind == .structDecl")
       }
 
       let _access = declaration.modifiers.first(where: \.isNeededAccessLevelModifier)
@@ -36,8 +18,19 @@ public struct DataModelMacro: MemberMacro, PeerMacro {
         access = ""
       }
 
-      let member = MemberBlockItemListSyntax {
+      // peer' macros are not allowed to introduce arbitrary names at global scope
+      let name = declaration.name.text + "Data"
+
+      let dataDecl = ClassDeclSyntax(
+        attributes: .init(itemsBuilder: {
+//          "@Model"
+          "@dynamicMemberLookup"
+        }),
+        classKeyword: " class ",
+        identifier: "\(raw: name)") {
       """
+
+      \(raw: access)typealias Entity = \(raw: declaration.name.text)
       var json: String
 
       init(entity: Entity) {
@@ -66,10 +59,11 @@ public struct DataModelMacro: MemberMacro, PeerMacro {
       \(raw: access)subscript<T>(dynamicMember keyPath: KeyPath<Entity, T>) -> T {
         entity[keyPath: keyPath]
       }
+
       """
       }
 
-      return ["\(raw: member)"]
+      return ["\(raw: dataDecl)"]
     case _:
       throw CustomError.message("@DataModel can only be applied to a struct or class declarations.")
     }
